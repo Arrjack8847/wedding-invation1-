@@ -1,0 +1,51 @@
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import EnvelopeOpening from "@/components/wedding/EnvelopeOpening";
+import HeroSection from "@/components/wedding/HeroSection";
+import StorySection from "@/components/wedding/StorySection";
+import EventDetails from "@/components/wedding/EventDetails";
+import Gallery from "@/components/wedding/Gallery";
+import ContactSection from "@/components/wedding/ContactSection";
+import FloatingPetals from "@/components/wedding/FloatingPetals";
+import MouseGlow from "@/components/wedding/MouseGlow";
+import MusicPlayer from "@/components/wedding/MusicPlayer";
+
+const Index = () => {
+  const [opened, setOpened] = useState(false);
+
+  return (
+    <>
+      <AnimatePresence>
+        {!opened && <EnvelopeOpening onOpen={() => setOpened(true)} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {opened && (
+          <motion.div
+            initial={{ opacity: 0, filter: "blur(8px)" }}
+            animate={{ opacity: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            className="relative"
+          >
+            <MusicPlayer play={opened} />
+
+            <FloatingPetals />
+
+            <div className="hidden md:block">
+              <MouseGlow />
+            </div>
+
+            <HeroSection />
+            <StorySection />
+            <EventDetails />
+            <Gallery />
+            <ContactSection />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
+
+export default Index;
