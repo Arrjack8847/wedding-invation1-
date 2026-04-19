@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion, type Transition } from "framer-motion";
 
 interface Props {
   onOpen: () => void;
@@ -14,33 +14,218 @@ type Stage =
   | "transitioning"
   | "done";
 
-const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-const OPEN_FADE_DURATION = 0.55;
-const CARD_RISE_DURATION = 1.45;
-const FULLSCREEN_DURATION = 0.9;
-const ENTER_DURATION = 0.7;
+const DURATIONS = {
+  openFade: 0.8,
+  cardRise: 1.8,
+  fullscreen: 1.0,
+  enter: 0.75,
+  cardRiseDelay: 0.22,
+  quick: 0.35,
+  medium: 0.7,
+  soft: 0.9,
+  long: 1.1,
+} as const;
 
-const floatTransition = {
-  duration: 3.6,
+const FLOAT_TRANSITION: Transition = {
+  duration: 3.8,
   repeat: Infinity,
-  ease: "easeInOut" as const,
+  ease: "easeInOut",
 };
+
+const SCENE = {
+  envelope: {
+    closed: {
+      mobileMaxWidth: 300,
+      desktopMaxWidth: 500,
+      y: 0,
+      scale: 1,
+    },
+    opened: {
+      widthPercent: 112,
+      mobileMaxWidth: 340,
+      desktopMaxWidth: 560,
+      scale: 1.38,
+      x: 0,
+      backY: -18,
+      frontY: -20,
+    },
+  },
+
+  card: {
+    small: {
+      widthPercent: 60,
+      maxWidth: 400,
+      aspectRatio: "5 / 4",
+      radius: "34px 34px 16px 16px",
+      startY: -25,
+      revealY: -82,
+      x: 0,
+      rotate: -0.6,
+      scale: 1.02,
+    },
+    fullscreen: {
+      width: "min(90vw, 820px)",
+      maxWidth: "820px",
+      aspectRatio: "16 / 10",
+      radius: "34px",
+    },
+  },
+
+  glow: {
+    size: 260,
+    yOffset: -28,
+    blur: 26,
+  },
+
+  hintText: {
+    bottomOffset: -80,
+  },
+} as const;
+
+const TRANSITIONS = {
+  quick: { duration: DURATIONS.quick, ease: EASE } satisfies Transition,
+  medium: { duration: DURATIONS.medium, ease: EASE } satisfies Transition,
+  fadeBlur: { duration: DURATIONS.soft, ease: EASE } satisfies Transition,
+  scaleSoft: { duration: DURATIONS.long, ease: EASE } satisfies Transition,
+  rise: { duration: DURATIONS.cardRise, ease: EASE } satisfies Transition,
+  fullscreen: { duration: DURATIONS.fullscreen, ease: EASE } satisfies Transition,
+};
+
+function getHintText(stage: Stage) {
+  if (stage === "sealed") return "Tap to Open";
+  if (stage === "revealed") return "Tap to Expand";
+  if (stage === "fullscreen") return "Tap to Enter";
+  return "";
+}
+
+function getCardLayout(isFullscreenLike: boolean) {
+  return {
+    width: isFullscreenLike
+      ? SCENE.card.fullscreen.width
+      : `${SCENE.card.small.widthPercent}%`,
+    maxWidth: isFullscreenLike
+      ? SCENE.card.fullscreen.maxWidth
+      : `${SCENE.card.small.maxWidth}px`,
+    aspectRatio: isFullscreenLike
+      ? SCENE.card.fullscreen.aspectRatio
+      : SCENE.card.small.aspectRatio,
+    radius: isFullscreenLike
+      ? SCENE.card.fullscreen.radius
+      : SCENE.card.small.radius,
+  };
+}
+
+function getCardAnimate(stage: Stage) {
+  const isFullscreenLike =
+    stage === "fullscreen" || stage === "transitioning";
+  const isVisible =
+    stage === "openingFade" ||
+    stage === "cardRising" ||
+    stage === "revealed" ||
+    stage === "fullscreen" ||
+    stage === "transitioning";
+
+  const yValue = isFullscreenLike
+    ? "-50%"
+    : `calc(-50% + ${
+        stage === "cardRising" || stage === "revealed"
+          ? SCENE.card.small.revealY
+          : SCENE.card.small.startY
+      }px)`;
+
+  return {
+    opacity: isVisible ? 1 : 0,
+    scale: isFullscreenLike ? 1 : SCENE.card.small.scale,
+    filter: isVisible ? "blur(0px)" : "blur(6px)",
+    x: isFullscreenLike
+      ? "-50%"
+      : `calc(-50% + ${SCENE.card.small.x}px)`,
+    y: yValue,
+    rotate: isFullscreenLike ? 0 : SCENE.card.small.rotate,
+    width: isFullscreenLike
+      ? SCENE.card.fullscreen.width
+      : `${SCENE.card.small.widthPercent}%`,
+    maxWidth: isFullscreenLike
+      ? SCENE.card.fullscreen.maxWidth
+      : `${SCENE.card.small.maxWidth}px`,
+  };
+}
+
+function getCardInitial() {
+  return {
+    opacity: 0,
+    scale: SCENE.card.small.scale + 0.02,
+    filter: "blur(6px)",
+    x: `calc(-50% + ${SCENE.card.small.x}px)`,
+    y: `calc(-50% + ${SCENE.card.small.startY}px)`,
+    rotate: SCENE.card.small.rotate,
+    width: `${SCENE.card.small.widthPercent}%`,
+    maxWidth: `${SCENE.card.small.maxWidth}px`,
+  };
+}
+
+function getCardTransition(stage: Stage) {
+  const isOpeningFade = stage === "openingFade";
+  const isCardRising = stage === "cardRising";
+  const isFullscreenLike =
+    stage === "fullscreen" || stage === "transitioning";
+
+  return {
+    opacity: isOpeningFade ? TRANSITIONS.fadeBlur : TRANSITIONS.quick,
+    filter: isOpeningFade ? TRANSITIONS.fadeBlur : TRANSITIONS.quick,
+    scale: isOpeningFade
+      ? TRANSITIONS.scaleSoft
+      : isCardRising
+      ? TRANSITIONS.rise
+      : isFullscreenLike
+      ? TRANSITIONS.fullscreen
+      : TRANSITIONS.quick,
+    y: isOpeningFade
+      ? TRANSITIONS.fadeBlur
+      : isCardRising
+      ? TRANSITIONS.rise
+      : isFullscreenLike
+      ? TRANSITIONS.fullscreen
+      : TRANSITIONS.quick,
+    rotate: isOpeningFade
+      ? TRANSITIONS.fadeBlur
+      : isCardRising
+      ? TRANSITIONS.rise
+      : isFullscreenLike
+      ? TRANSITIONS.fullscreen
+      : TRANSITIONS.quick,
+    width: isFullscreenLike ? TRANSITIONS.fullscreen : TRANSITIONS.quick,
+    maxWidth: isFullscreenLike ? TRANSITIONS.fullscreen : TRANSITIONS.quick,
+  };
+}
 
 const EnvelopeOpening = ({ onOpen }: Props) => {
   const [stage, setStage] = useState<Stage>("sealed");
   const timeoutsRef = useRef<number[]>([]);
 
-  const addTimeout = (callback: () => void, delay: number) => {
-    const id = window.setTimeout(callback, delay);
+  const clearAllTimeouts = useCallback(() => {
+    timeoutsRef.current.forEach((id) => window.clearTimeout(id));
+    timeoutsRef.current = [];
+  }, []);
+
+  const schedule = useCallback((callback: () => void, delay: number) => {
+    const id = window.setTimeout(() => {
+      callback();
+      timeoutsRef.current = timeoutsRef.current.filter(
+        (timeoutId) => timeoutId !== id
+      );
+    }, delay);
+
     timeoutsRef.current.push(id);
-  };
+  }, []);
 
   useEffect(() => {
     return () => {
-      timeoutsRef.current.forEach((id) => window.clearTimeout(id));
+      clearAllTimeouts();
     };
-  }, []);
+  }, [clearAllTimeouts]);
 
   const isSealed = stage === "sealed";
   const isOpeningFade = stage === "openingFade";
@@ -54,19 +239,25 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
     stage === "cardRising" ||
     stage === "transitioning";
 
+  const cardLayout = useMemo(
+    () => getCardLayout(isFullscreen || isTransitioning),
+    [isFullscreen, isTransitioning]
+  );
+
   const handleClick = useCallback(() => {
     if (isBusy) return;
 
     if (stage === "sealed") {
+      clearAllTimeouts();
       setStage("openingFade");
 
-      addTimeout(() => {
+      schedule(() => {
         setStage("cardRising");
-      }, OPEN_FADE_DURATION * 1000);
+      }, (DURATIONS.openFade + DURATIONS.cardRiseDelay) * 1000);
 
-      addTimeout(() => {
+      schedule(() => {
         setStage("revealed");
-      }, (OPEN_FADE_DURATION + CARD_RISE_DURATION) * 1000);
+      }, (DURATIONS.openFade + DURATIONS.cardRiseDelay + DURATIONS.cardRise) * 1000);
 
       return;
     }
@@ -77,34 +268,17 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
     }
 
     if (stage === "fullscreen") {
+      clearAllTimeouts();
       setStage("transitioning");
 
-      addTimeout(() => {
+      schedule(() => {
         setStage("done");
         onOpen();
-      }, ENTER_DURATION * 1000);
+      }, DURATIONS.enter * 1000);
     }
-  }, [stage, isBusy, onOpen]);
+  }, [stage, isBusy, schedule, clearAllTimeouts, onOpen]);
 
   if (stage === "done") return null;
-
-  // Keep your exact working PNG positions
-  const backEnvelopeY = -18;
-  const frontPocketY = -20;
-  const openedEnvelopeScale = 1.38;
-
-  // Keep your exact working card positions
-  const cardStartY = 26;
-  const cardRevealY = -76;
-
-  const cardWidth =
-    isFullscreen || isTransitioning ? "min(90vw, 820px)" : "48%";
-  const cardMaxWidth =
-    isFullscreen || isTransitioning ? "820px" : "220px";
-  const cardAspectRatio =
-    isFullscreen || isTransitioning ? "16 / 10" : "5 / 7";
-  const cardRadius =
-    isFullscreen || isTransitioning ? "34px" : "34px 34px 16px 16px";
 
   return (
     <div
@@ -163,83 +337,78 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
               ? { opacity: 0, scale: 1.02 }
               : { opacity: 1, scale: 1 }
           }
-          transition={
-            isSealed ? floatTransition : { duration: 0.7, ease: EASE }
-          }
-          style={{
-            cursor: isBusy ? "default" : "pointer",
-          }}
+          transition={isSealed ? FLOAT_TRANSITION : TRANSITIONS.medium}
+          style={{ cursor: isBusy ? "default" : "pointer" }}
         >
-          {!isTransitioning && (
+          {!isTransitioning && getHintText(stage) && (
             <motion.div
               key={stage}
-              className="absolute -bottom-20 left-1/2 z-[20] -translate-x-1/2 text-center"
+              className="absolute left-1/2 z-[20] -translate-x-1/2 text-center"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45 }}
+              style={{ bottom: `${SCENE.hintText.bottomOffset}px` }}
             >
               <p className="text-[10px] uppercase tracking-[0.34em] text-[#af8d42] sm:text-[11px]">
-                {isSealed
-                  ? "Tap to Open"
-                  : isRevealed
-                  ? "Tap to Expand"
-                  : isFullscreen
-                  ? "Tap to Enter"
-                  : ""}
+                {getHintText(stage)}
               </p>
             </motion.div>
           )}
 
-          {/* CLOSED ENVELOPE ONLY BEFORE FIRST CLICK */}
           {isSealed && (
             <motion.img
               src="/Envelope Closed.png"
               alt="Closed envelope"
-              className="relative z-[6] w-full max-w-[300px] drop-shadow-[0_26px_50px_rgba(93,70,28,0.16)] sm:max-w-[500px]"
+              className="envelope-closed relative z-[6] w-full drop-shadow-[0_26px_50px_rgba(93,70,28,0.16)]"
               initial={{ opacity: 0, scale: 0.96, y: 18 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: EASE }}
+              animate={{
+                opacity: 1,
+                scale: SCENE.envelope.closed.scale,
+                y: SCENE.envelope.closed.y,
+              }}
+              transition={TRANSITIONS.medium}
+              style={{
+                maxWidth: `${SCENE.envelope.closed.mobileMaxWidth}px`,
+              }}
             />
           )}
 
-          {/* OPENED ENVELOPE SYSTEM */}
           {!isSealed && (
             <>
-              {/* BACK PNG */}
-             <motion.img
-  src="/Envelope Opened.png"
-  alt="Opened envelope back"
-  className="absolute left-1/2 top-1/2 z-[1] w-[112%] max-w-[340px] sm:max-w-[560px]"
-  initial={{
-    opacity: 0,
-    scale: openedEnvelopeScale - 0.015,
-    x: "-50%",
-    y: `calc(-50% + ${backEnvelopeY}px)`,
-  }}
-  animate={{
-    opacity: isFullscreen || isTransitioning ? 0.18 : 1,
-    scale: openedEnvelopeScale,
-    x: "-50%",
-    y: `calc(-50% + ${backEnvelopeY}px)`,
-  }}
-  transition={{
-    opacity: {
-      duration: isOpeningFade ? 0.9 : 0.45,
-      ease: [0.16, 1, 0.3, 1],
-    },
-    scale: {
-      duration: isOpeningFade ? 1.05 : 0.45,
-      ease: [0.16, 1, 0.3, 1],
-    },
-  }}
-  style={{
-    top: "50%",
-    left: "50%",
-    filter: "drop-shadow(0 30px 50px rgba(91,67,28,0.11))",
-  }}
-/>
+              <motion.img
+                src="/Envelope Opened.png"
+                alt="Opened envelope back"
+                className="envelope-opened-back absolute left-1/2 top-1/2 z-[1]"
+                initial={{
+                  opacity: 0,
+                  scale: SCENE.envelope.opened.scale + 0.02,
+                  filter: "blur(6px)",
+                  x: `calc(-50% + ${SCENE.envelope.opened.x}px)`,
+                  y: `calc(-50% + ${SCENE.envelope.opened.backY}px)`,
+                }}
+                animate={{
+                  opacity: isFullscreen || isTransitioning ? 0.18 : 1,
+                  scale: SCENE.envelope.opened.scale,
+                  filter: "blur(0px)",
+                  x: `calc(-50% + ${SCENE.envelope.opened.x}px)`,
+                  y: `calc(-50% + ${SCENE.envelope.opened.backY}px)`,
+                }}
+                transition={{
+                  opacity: TRANSITIONS.fadeBlur,
+                  scale: TRANSITIONS.scaleSoft,
+                  filter: TRANSITIONS.fadeBlur,
+                }}
+                style={{
+                  width: `${SCENE.envelope.opened.widthPercent}%`,
+                  maxWidth: `${SCENE.envelope.opened.mobileMaxWidth}px`,
+                  top: "50%",
+                  left: "50%",
+                  filter: isOpeningFade
+                    ? "drop-shadow(0 30px 50px rgba(91,67,28,0.11)) blur(0px)"
+                    : "drop-shadow(0 30px 50px rgba(91,67,28,0.11))",
+                }}
+              />
 
-              {/* CARD GLOW */}
               <motion.div
                 className="absolute left-1/2 top-1/2 z-[2] rounded-full"
                 initial={{ opacity: 0 }}
@@ -253,82 +422,35 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
                   x: "-50%",
                   y:
                     isCardRising || isRevealed
-                      ? "calc(-50% - 28px)"
+                      ? `calc(-50% + ${SCENE.glow.yOffset}px)`
                       : "-50%",
                   scale: isFullscreen ? 1.6 : 1,
                 }}
-                transition={{ duration: 0.7, ease: EASE }}
+                transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
                 style={{
-                  width: "260px",
-                  height: "260px",
+                  width: `${SCENE.glow.size}px`,
+                  height: `${SCENE.glow.size}px`,
                   background:
                     "radial-gradient(circle, rgba(255,225,170,0.40) 0%, rgba(255,225,170,0.16) 38%, rgba(255,225,170,0) 72%)",
-                  filter: "blur(26px)",
+                  filter: `blur(${SCENE.glow.blur}px)`,
                   pointerEvents: "none",
                 }}
               />
 
-              {/* CARD */}
               <motion.div
                 className="absolute left-1/2 top-1/2 z-[8]"
-                initial={false}
-                animate={{
-                  opacity: 1,
-                  x: "-50%",
-                  y:
-                    isFullscreen || isTransitioning
-                      ? "-50%"
-                      : `calc(-50% + ${
-                          isOpeningFade
-                            ? cardStartY
-                            : isCardRising || isRevealed
-                            ? cardRevealY
-                            : cardStartY
-                        }px)`,
-                  scale: isFullscreen || isTransitioning ? 1 : 1,
-                  rotate:
-                    isFullscreen || isTransitioning
-                      ? 0
-                      : isCardRising || isRevealed
-                      ? -1
-                      : 0,
-                  width: cardWidth,
-                  maxWidth: cardMaxWidth,
-                }}
-                transition={{
-                  y:
-                    isOpeningFade
-                      ? { duration: 0 }
-                      : isCardRising
-                      ? { duration: CARD_RISE_DURATION, ease: EASE }
-                      : isFullscreen || isTransitioning
-                      ? { duration: FULLSCREEN_DURATION, ease: EASE }
-                      : { duration: 0 },
-                  rotate:
-                    isCardRising
-                      ? { duration: CARD_RISE_DURATION, ease: EASE }
-                      : isFullscreen || isTransitioning
-                      ? { duration: FULLSCREEN_DURATION, ease: EASE }
-                      : { duration: 0 },
-                  width:
-                    isFullscreen || isTransitioning
-                      ? { duration: FULLSCREEN_DURATION, ease: EASE }
-                      : { duration: 0 },
-                  maxWidth:
-                    isFullscreen || isTransitioning
-                      ? { duration: FULLSCREEN_DURATION, ease: EASE }
-                      : { duration: 0 },
-                  opacity: { duration: 0.2, ease: EASE },
-                }}
+                initial={getCardInitial()}
+                animate={getCardAnimate(stage)}
+                transition={getCardTransition(stage)}
                 style={{
-                  aspectRatio: cardAspectRatio,
+                  aspectRatio: cardLayout.aspectRatio,
                   transformOrigin: "center center",
                 }}
               >
                 <div
                   className="relative h-full w-full overflow-hidden"
                   style={{
-                    borderRadius: cardRadius,
+                    borderRadius: cardLayout.radius,
                     background:
                       "linear-gradient(180deg, #fffdf8 0%, #fbf4e8 55%, #f8eedf 100%)",
                     border: "1px solid #e7d7b4",
@@ -339,6 +461,13 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
                           inset 0 -10px 18px rgba(93,70,28,0.05),
                           0 30px 70px rgba(93,70,28,0.16),
                           0 10px 24px rgba(93,70,28,0.10)
+                        `
+                        : isCardRising
+                        ? `
+                          inset 0 1px 0 rgba(255,255,255,0.95),
+                          inset 0 -10px 18px rgba(93,70,28,0.06),
+                          0 30px 60px rgba(93,70,28,0.18),
+                          0 8px 18px rgba(93,70,28,0.10)
                         `
                         : `
                           inset 0 1px 0 rgba(255,255,255,0.95),
@@ -392,206 +521,146 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
                   />
 
                   <div
-                    className={`relative flex h-full flex-col items-center justify-center text-center ${
-                      isFullscreen || isTransitioning
-                        ? "px-10 py-12 sm:px-14"
-                        : "px-4 py-6 sm:px-5"
-                    }`}
-                  >
-                    <p
-                      className={`uppercase tracking-[0.42em] text-[#ba9650] ${
-                        isFullscreen || isTransitioning
-                          ? "mb-5 text-[10px] sm:text-[12px]"
-                          : "mb-3 text-[7px] sm:text-[8px]"
-                      }`}
-                    >
-                      Wedding Invitation
-                    </p>
+  className={`relative flex h-full flex-col items-center justify-center text-center ${
+    isFullscreen || isTransitioning
+      ? "px-8 py-8 sm:px-12"
+      : "px-3 py-4 sm:px-4"
+  }`}
+>
+  {/* TITLE */}
+  <p
+    className={`uppercase tracking-[0.32em] text-[#ba9650] ${
+      isFullscreen || isTransitioning
+        ? "mb-3 text-[10px] sm:text-[12px]"
+        : "mb-2 text-[7px]"
+    }`}
+  >
+    Wedding Invitation
+  </p>
 
-                    <div
-                      className={`bg-gradient-to-r from-transparent via-[#d6b164] to-transparent opacity-80 ${
-                        isFullscreen || isTransitioning
-                          ? "mb-7 h-px w-24"
-                          : "mb-4 h-px w-12"
-                      }`}
-                    />
+  {/* LINE */}
+  <div
+    className={`bg-gradient-to-r from-transparent via-[#d6b164] to-transparent opacity-80 ${
+      isFullscreen || isTransitioning
+        ? "mb-4 h-px w-20"
+        : "mb-3 h-px w-10"
+    }`}
+  />
 
-                    <div
-                      className={
-                        isFullscreen || isTransitioning
-                          ? "space-y-2"
-                          : "space-y-[2px]"
-                      }
-                    >
-                      <p
-                        className={`font-display leading-[1.02] text-[#3e332b] ${
-                          isFullscreen || isTransitioning
-                            ? "text-[28px] sm:text-[42px]"
-                            : "text-[16px] sm:text-[21px]"
-                        }`}
-                      >
-                        Myo Myat
-                      </p>
-                      <p
-                        className={`font-display leading-[1.02] text-[#3e332b] ${
-                          isFullscreen || isTransitioning
-                            ? "text-[28px] sm:text-[42px]"
-                            : "text-[16px] sm:text-[21px]"
-                        }`}
-                      >
-                        Khine
-                      </p>
-                    </div>
+  {/* NAMES ROW (SIDE BY SIDE FEEL) */}
+  <div className="flex flex-col items-center">
+    <p
+      className={`font-display text-[#3e332b] leading-[1.05] ${
+        isFullscreen || isTransitioning
+          ? "text-[26px] sm:text-[38px]"
+          : "text-[15px] sm:text-[18px]"
+      }`}
+    >
+      Myo Myat Khine
+    </p>
 
-                    <p
-                      className={`text-[#c59d46] ${
-                        isFullscreen || isTransitioning
-                          ? "my-4 text-[22px] sm:text-[28px]"
-                          : "my-2 text-[13px] sm:text-[15px]"
-                      }`}
-                    >
-                      &
-                    </p>
+    <p
+      className={`text-[#c59d46] ${
+        isFullscreen || isTransitioning
+          ? "my-2 text-[18px]"
+          : "my-1 text-[12px]"
+      }`}
+    >
+      &
+    </p>
 
-                    <div
-                      className={
-                        isFullscreen || isTransitioning
-                          ? "space-y-2"
-                          : "space-y-[2px]"
-                      }
-                    >
-                      <p
-                        className={`font-display leading-[1.02] text-[#3e332b] ${
-                          isFullscreen || isTransitioning
-                            ? "text-[28px] sm:text-[42px]"
-                            : "text-[16px] sm:text-[21px]"
-                        }`}
-                      >
-                        Than Htay
-                      </p>
-                      <p
-                        className={`font-display leading-[1.02] text-[#3e332b] ${
-                          isFullscreen || isTransitioning
-                            ? "text-[28px] sm:text-[42px]"
-                            : "text-[16px] sm:text-[21px]"
-                        }`}
-                      >
-                        Hlaing
-                      </p>
-                    </div>
+    <p
+      className={`font-display text-[#3e332b] leading-[1.05] ${
+        isFullscreen || isTransitioning
+          ? "text-[26px] sm:text-[38px]"
+          : "text-[15px] sm:text-[18px]"
+      }`}
+    >
+      Than Htay Hlaing
+    </p>
+  </div>
 
-                    <div
-                      className={`flex items-center gap-2 ${
-                        isFullscreen || isTransitioning ? "my-7" : "my-4"
-                      }`}
-                    >
-                      <span
-                        className={`bg-[#dcc27d]/75 ${
-                          isFullscreen || isTransitioning
-                            ? "h-px w-10"
-                            : "h-px w-6"
-                        }`}
-                      />
-                      <span
-                        className={`text-[#c8a042] ${
-                          isFullscreen || isTransitioning
-                            ? "text-[12px]"
-                            : "text-[8px]"
-                        }`}
-                      >
-                        ✦
-                      </span>
-                      <span
-                        className={`bg-[#dcc27d]/75 ${
-                          isFullscreen || isTransitioning
-                            ? "h-px w-10"
-                            : "h-px w-6"
-                        }`}
-                      />
-                    </div>
+  {/* DECOR */}
+  <div
+    className={`flex items-center gap-2 ${
+      isFullscreen || isTransitioning ? "my-4" : "my-2"
+    }`}
+  >
+    <span className="h-px w-6 bg-[#dcc27d]/75" />
+    <span className="text-[#c8a042] text-[10px]">✦</span>
+    <span className="h-px w-6 bg-[#dcc27d]/75" />
+  </div>
 
-                    <p
-                      className={`text-[#7d6c5f] ${
-                        isFullscreen || isTransitioning
-                          ? "max-w-[500px] text-[13px] leading-[1.9] sm:text-[15px]"
-                          : "max-w-[165px] text-[8px] leading-[1.65] sm:text-[9px]"
-                      }`}
-                    >
-                      Together with our families, we invite you to celebrate
-                      our love, our joy, and the beginning of our forever.
-                    </p>
+  {/* DESCRIPTION */}
+  <p
+    className={`text-[#7d6c5f] ${
+      isFullscreen || isTransitioning
+        ? "max-w-[420px] text-[12px] leading-[1.7]"
+        : "max-w-[140px] text-[8px] leading-[1.5]"
+    }`}
+  >
+    Together with our families, we invite you to celebrate our love and the
+    beginning of our forever.
+  </p>
 
-                    <div
-                      className={`bg-gradient-to-r from-transparent via-[#d6b164] to-transparent opacity-80 ${
-                        isFullscreen || isTransitioning
-                          ? "mt-7 h-px w-28"
-                          : "mt-4 h-px w-14"
-                      }`}
-                    />
+  {/* LINE */}
+  <div
+    className={`bg-gradient-to-r from-transparent via-[#d6b164] to-transparent opacity-80 ${
+      isFullscreen || isTransitioning
+        ? "mt-4 h-px w-20"
+        : "mt-3 h-px w-10"
+    }`}
+  />
 
-                    <div
-                      className={
-                        isFullscreen || isTransitioning
-                          ? "mt-6 space-y-2"
-                          : "mt-3 space-y-1"
-                      }
-                    >
-                      <p
-                        className={`uppercase tracking-[0.26em] text-[#af8a39] ${
-                          isFullscreen || isTransitioning
-                            ? "text-[10px] sm:text-[12px]"
-                            : "text-[7px] sm:text-[8px]"
-                        }`}
-                      >
-                        Sunday
-                      </p>
-                      <p
-                        className={`tracking-[0.14em] text-[#8c6a2f] ${
-                          isFullscreen || isTransitioning
-                            ? "text-[13px] sm:text-[15px]"
-                            : "text-[10px] sm:text-[11px]"
-                        }`}
-                      >
-                        29 January 2027
-                      </p>
-                    </div>
-                  </div>
+  {/* DATE */}
+  <div
+    className={`${
+      isFullscreen || isTransitioning ? "mt-3 space-y-1" : "mt-2 space-y-[2px]"
+    }`}
+  >
+    <p className="uppercase tracking-[0.2em] text-[#af8a39] text-[9px]">
+      Sunday
+    </p>
+    <p className="text-[#8c6a2f] text-[11px] tracking-[0.1em]">
+      29 January 2027
+    </p>
+  </div>
+</div>
+                  
                 </div>
               </motion.div>
 
-              {/* FRONT POCKET */}
               <motion.img
-  src="/Envelope Opened Cutted.png"
-  alt="Opened envelope front pocket"
-  className="absolute left-1/2 top-1/2 z-[10] w-[112%] max-w-[340px] sm:max-w-[560px]"
-  initial={{
-    opacity: 0,
-    scale: openedEnvelopeScale - 0.015,
-    x: "-50%",
-    y: `calc(-50% + ${frontPocketY}px)`,
-  }}
-  animate={{
-    opacity: isFullscreen || isTransitioning ? 0 : 1,
-    scale: openedEnvelopeScale,
-    x: "-50%",
-    y: `calc(-50% + ${frontPocketY}px)`,
-  }}
-  transition={{
-    opacity: {
-      duration: isOpeningFade ? 0.9 : 0.45,
-      ease: [0.16, 1, 0.3, 1],
-    },
-    scale: {
-      duration: isOpeningFade ? 1.05 : 0.45,
-      ease: [0.16, 1, 0.3, 1],
-    },
-  }}
-  style={{
-    top: "50%",
-    left: "50%",
-    filter: "drop-shadow(0 30px 50px rgba(91,67,28,0.11))",
-  }}
-/>
+                src="/Envelope Opened Cutted.png"
+                alt="Opened envelope front pocket"
+                className="envelope-opened-front absolute left-1/2 top-1/2 z-[10]"
+                initial={{
+                  opacity: 0,
+                  scale: SCENE.envelope.opened.scale + 0.02,
+                  filter: "blur(6px)",
+                  x: `calc(-50% + ${SCENE.envelope.opened.x}px)`,
+                  y: `calc(-50% + ${SCENE.envelope.opened.frontY}px)`,
+                }}
+                animate={{
+                  opacity: isFullscreen || isTransitioning ? 0 : 1,
+                  scale: SCENE.envelope.opened.scale,
+                  filter: "blur(0px)",
+                  x: `calc(-50% + ${SCENE.envelope.opened.x}px)`,
+                  y: `calc(-50% + ${SCENE.envelope.opened.frontY}px)`,
+                }}
+                transition={{
+                  opacity: { duration: 0.45, ease: EASE },
+                  scale: TRANSITIONS.scaleSoft,
+                  filter: TRANSITIONS.fadeBlur,
+                }}
+                style={{
+                  width: `${SCENE.envelope.opened.widthPercent}%`,
+                  maxWidth: `${SCENE.envelope.opened.mobileMaxWidth}px`,
+                  top: "50%",
+                  left: "50%",
+                  filter: "drop-shadow(0 30px 50px rgba(91,67,28,0.11))",
+                }}
+              />
 
               {isTransitioning && (
                 <motion.div
@@ -611,6 +680,19 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
           )}
         </motion.div>
       </div>
+
+      <style>{`
+        @media (min-width: 640px) {
+          .envelope-closed {
+            max-width: ${SCENE.envelope.closed.desktopMaxWidth}px !important;
+          }
+
+          .envelope-opened-back,
+          .envelope-opened-front {
+            max-width: ${SCENE.envelope.opened.desktopMaxWidth}px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };
