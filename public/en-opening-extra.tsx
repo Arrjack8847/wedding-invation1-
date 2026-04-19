@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, type Transition } from "framer-motion";
-import OpeningBackground from "./OpeningBackground";
 
 interface Props {
   onOpen: () => void;
@@ -8,13 +7,13 @@ interface Props {
 
 type Stage =
   | "sealed"
-  | "ribbonDrop"   // ✅ ADD
   | "openingFade"
   | "cardRising"
   | "revealed"
   | "fullscreen"
   | "transitioning"
   | "done";
+
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const DURATIONS = {
@@ -292,10 +291,40 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
         `,
       }}
     >
-      <OpeningBackground
-  isFullscreen={isFullscreen}
-  isTransitioning={isTransitioning}
-/>
+      <motion.div
+        className="absolute left-1/2 top-1/2 h-[360px] w-[360px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl sm:h-[680px] sm:w-[680px]"
+        animate={{
+          scale: [1, 1.05, 1],
+          opacity: [0.52, 0.72, 0.52],
+        }}
+        transition={{ duration: 5.8, repeat: Infinity, ease: "easeInOut" }}
+        style={{
+          background:
+            "radial-gradient(circle, rgba(212,177,92,0.22) 0%, rgba(212,177,92,0.10) 36%, rgba(212,177,92,0) 72%)",
+        }}
+      />
+
+      <div
+        className="absolute inset-0 opacity-[0.28]"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(255,255,255,0.20), rgba(255,255,255,0.04) 30%, rgba(255,255,255,0.00) 60%)",
+        }}
+      />
+
+      {(isFullscreen || isTransitioning) && (
+        <motion.div
+          className="absolute inset-0 z-[4]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isTransitioning ? 0.92 : 0.55 }}
+          transition={{ duration: 0.55, ease: EASE }}
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(255,250,244,0.68), rgba(245,234,216,0.84))",
+            pointerEvents: "none",
+          }}
+        />
+      )}
 
       <div className="absolute inset-0 flex items-center justify-center px-4">
         <motion.div
@@ -325,44 +354,7 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
               </p>
             </motion.div>
           )}
-          {(stage === "sealed" || stage === "ribbonDrop") && (
-  <motion.img
-  src="/ribbon.png"
-  className="absolute left-1/2 top-1/2 z-[9] pointer-events-none"
-  initial={{
-    opacity: 1,
-    x: -50,   // ✅ MATCH THIS
-    y: -120,
-    scale: 1,
-  }}
-  animate={
-    stage === "ribbonDrop"
-      ? {
-          x: -30,   // slight movement while dropping
-          y: 200,
-          opacity: 0,
-          rotate: 12,
-        }
-      : {
-          x: -79,   // ✅ SAME AS INITIAL
-          y: -50,
-          opacity: 1,
-          rotate: 0,
-        }
-  }
-  transition={{
-    duration: 0.6,
-    ease: EASE,
-  }}
-  style={{
-    width: "30%",
-    maxWidth: "260px",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-  }}
-/>
-)}
+
           {isSealed && (
             <motion.img
               src="/Envelope Closed.png"
