@@ -10,7 +10,7 @@ interface Props {
 /* 🎛️ CONTROL PANEL */
 const BG = {
   video: {
-    src: "/luxury-bg.mp4",
+    src: "/luxury-bg1.mp4",
   },
 
   blur: {
