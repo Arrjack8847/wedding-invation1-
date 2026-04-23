@@ -5,6 +5,7 @@ import HeroSection from "@/components/wedding/HeroSection";
 import StorySection from "@/components/wedding/StorySection";
 import EventDetails from "@/components/wedding/EventDetails";
 import Gallery from "@/components/wedding/Gallery";
+import RSVPSection from "@/components/wedding/RSVPSection";
 import ContactSection from "@/components/wedding/ContactSection";
 import FloatingPetals from "@/components/wedding/FloatingPetals";
 import MouseGlow from "@/components/wedding/MouseGlow";
@@ -14,37 +15,35 @@ const Index = () => {
   const [opened, setOpened] = useState(false);
 
   return (
-    <>
-      <AnimatePresence>
-        {!opened && <EnvelopeOpening onOpen={() => setOpened(true)} />}
-      </AnimatePresence>
+    <AnimatePresence mode="wait">
+      {!opened ? (
+        <EnvelopeOpening key="envelope" onOpen={() => setOpened(true)} />
+      ) : (
+        <motion.div
+          key="main-site"
+          initial={{ opacity: 0, filter: "blur(8px)" }}
+          animate={{ opacity: 1, filter: "blur(0px)" }}
+          exit={{ opacity: 0, filter: "blur(6px)" }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="relative"
+        >
+          <MusicPlayer play={opened} />
 
-      <AnimatePresence>
-        {opened && (
-          <motion.div
-            initial={{ opacity: 0, filter: "blur(8px)" }}
-            animate={{ opacity: 1, filter: "blur(0px)" }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-            className="relative"
-          >
-            <MusicPlayer play={opened} />
+          <FloatingPetals />
 
-            <FloatingPetals />
+          <div className="hidden md:block">
+            <MouseGlow />
+          </div>
 
-            <div className="hidden md:block">
-              <MouseGlow />
-            </div>
-
-            <HeroSection />
-            <StorySection />
-            <EventDetails />
-            <Gallery />
-            <ContactSection />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+          <HeroSection />
+          <StorySection />
+          <EventDetails />
+          <Gallery />
+          <RSVPSection />
+          <ContactSection />
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

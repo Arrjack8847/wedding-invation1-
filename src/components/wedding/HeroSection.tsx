@@ -2,11 +2,15 @@ import { motion } from "framer-motion";
 
 const HeroSection = () => {
   return (
+    
     <section className="relative min-h-screen w-full overflow-hidden flex items-center justify-center">
+
       <motion.div
         className="absolute inset-0"
         initial={{ scale: 1.1 }}
         animate={{ scale: 1 }}
+
+
         transition={{
           duration: 18,
           ease: "linear",

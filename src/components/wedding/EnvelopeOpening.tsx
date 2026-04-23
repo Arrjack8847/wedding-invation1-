@@ -74,11 +74,13 @@ const SCENE = {
     mobileWidth: "min(50vw, 170px)",
   },
     fullscreen: {
-      aspectRatio: "16 / 10",
-      radius: "30px",
-      width: "min(92vw, 820px)",
-      mobileWidth: "min(94vw, 820px)",
-    },
+  aspectRatio: "16 / 10",
+  mobileAspectRatio: "10 / 14",
+  radius: "30px",
+  mobileRadius: "26px",
+  width: "min(92vw, 820px)",
+  mobileWidth: "min(88vw, 420px)",
+},
   },
 
   glow: {
@@ -312,16 +314,20 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
   const isCompactCard = isMobile && !isExpandedLike;
 
   const cardLayout = useMemo(() => {
-    return {
-      width: isExpandedLike ? cardFullscreenWidth : cardSmallWidth,
-      aspectRatio: isExpandedLike
-        ? SCENE.card.fullscreen.aspectRatio
-        : SCENE.card.small.aspectRatio,
-      radius: isExpandedLike
-        ? SCENE.card.fullscreen.radius
-        : SCENE.card.small.radius,
-    };
-  }, [isExpandedLike, cardFullscreenWidth, cardSmallWidth]);
+  return {
+    width: isExpandedLike ? cardFullscreenWidth : cardSmallWidth,
+    aspectRatio: isExpandedLike
+      ? isMobile
+        ? SCENE.card.fullscreen.mobileAspectRatio
+        : SCENE.card.fullscreen.aspectRatio
+      : SCENE.card.small.aspectRatio,
+    radius: isExpandedLike
+      ? isMobile
+        ? SCENE.card.fullscreen.mobileRadius
+        : SCENE.card.fullscreen.radius
+      : SCENE.card.small.radius,
+  };
+}, [isExpandedLike, cardFullscreenWidth, cardSmallWidth, isMobile]);
 
   const handleClick = useCallback(() => {
     if (isBusy) return;
@@ -712,19 +718,23 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
                     <div
   className={`relative flex h-full flex-col items-center justify-start text-center ${
     isExpandedLike
-      ? "px-8 py-8 sm:px-12"
-      : isCompactCard
-      ? "px-2.5 pt-5 pb-2"
-      : "px-3 py-4 sm:px-4"
+  ? isMobile
+    ? "px-5 py-7"
+    : "px-8 py-8 sm:px-12"
+  : isCompactCard
+  ? "px-2.5 pt-5 pb-2"
+  : "px-3 py-4 sm:px-4"
   }`}
 >
                       <p
   className={`uppercase text-[#ba9650] ${
     isExpandedLike
-      ? "mb-3 text-[10px] tracking-[0.32em] sm:text-[12px]"
-      : isCompactCard
-      ? "mb-1.5 text-[5.5px] tracking-[0.18em]"
-      : "mb-2 text-[7px] tracking-[0.26em]"
+  ? isMobile
+    ? "mb-2.5 text-[9px] tracking-[0.24em]"
+    : "mb-3 text-[10px] tracking-[0.32em] sm:text-[12px]"
+  : isCompactCard
+  ? "mb-1.5 text-[5.5px] tracking-[0.18em]"
+  : "mb-2 text-[7px] tracking-[0.26em]"
   }`}
 >
   Wedding Invitation
@@ -744,10 +754,12 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
   <p
     className={`font-display text-[#3e332b] ${
       isExpandedLike
-        ? "text-[26px] leading-[1.05] sm:text-[38px]"
-        : isCompactCard
-        ? "text-[10px] leading-[1.02]"
-        : "text-[13px] leading-[1.04] sm:text-[18px]"
+  ? isMobile
+    ? "text-[22px] leading-[1.06]"
+    : "text-[26px] leading-[1.05] sm:text-[38px]"
+  : isCompactCard
+  ? "text-[10px] leading-[1.02]"
+  : "text-[13px] leading-[1.04] sm:text-[18px]"
     }`}
   >
     Myo Myat Khine
@@ -756,10 +768,12 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
   <p
     className={`text-[#c59d46] ${
       isExpandedLike
-        ? "my-2 text-[18px]"
-        : isCompactCard
-        ? "my-[2px] text-[8px]"
-        : "my-1 text-[10px]"
+  ? isMobile
+    ? "my-1.5 text-[15px]"
+    : "my-2 text-[18px]"
+  : isCompactCard
+  ? "my-[2px] text-[8px]"
+  : "my-1 text-[10px]"
     }`}
   >
     &
@@ -767,12 +781,14 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
 
   <p
     className={`font-display text-[#3e332b] ${
-      isExpandedLike
-        ? "text-[26px] leading-[1.05] sm:text-[38px]"
-        : isCompactCard
-        ? "text-[10px] leading-[1.02]"
-        : "text-[13px] leading-[1.04] sm:text-[18px]"
-    }`}
+  isExpandedLike
+    ? isMobile
+      ? "text-[22px] leading-[1.06]"
+      : "text-[26px] leading-[1.05] sm:text-[38px]"
+    : isCompactCard
+    ? "text-[10px] leading-[1.02]"
+    : "text-[13px] leading-[1.04] sm:text-[18px]"
+}`}
   >
     Than Htay Hlaing
   </p>
@@ -780,27 +796,39 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
 
 <div
   className={`flex items-center ${
-    isExpandedLike
-      ? "my-4 gap-2"
-      : isCompactCard
-      ? "my-1.5 gap-1"
-      : "my-2 gap-2"
+  isExpandedLike
+    ? isMobile
+      ? "my-3 gap-2"
+      : "my-4 gap-2"
+    : isCompactCard
+    ? "my-1.5 gap-1"
+    : "my-2 gap-2"
+}`}
+>
+  <span
+  className={`h-px bg-[#dcc27d]/75 ${
+    isExpandedLike ? (isMobile ? "w-5" : "w-6") : isCompactCard ? "w-4" : "w-6"
+  }`}
+/>
+  <span
+  className={`text-[#c8a042] ${
+    isExpandedLike ? (isMobile ? "text-[9px]" : "text-[10px]") : isCompactCard ? "text-[7px]" : "text-[10px]"
   }`}
 >
-  <span className={`${isCompactCard ? "w-4" : "w-6"} h-px bg-[#dcc27d]/75`} />
-  <span className={`${isCompactCard ? "text-[7px]" : "text-[10px]"} text-[#c8a042]`}>
-    ✦
-  </span>
+  ✦
+</span>
   <span className={`${isCompactCard ? "w-4" : "w-6"} h-px bg-[#dcc27d]/75`} />
 </div>
 
 <p
   className={`text-[#7d6c5f] ${
     isExpandedLike
-      ? "max-w-[420px] text-[12px] leading-[1.7]"
-      : isCompactCard
-      ? "max-w-[112px] text-[6px] leading-[1.3]"
-      : "max-w-[125px] text-[7px] leading-[1.45]"
+  ? isMobile
+    ? "max-w-[240px] text-[11px] leading-[1.65]"
+    : "max-w-[420px] text-[12px] leading-[1.7]"
+  : isCompactCard
+  ? "max-w-[112px] text-[6px] leading-[1.3]"
+  : "max-w-[125px] text-[7px] leading-[1.45]"
   }`}
 >
   Together with our families, we invite you to celebrate our
@@ -820,17 +848,23 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
 <div
   className={`${
     isExpandedLike
-      ? "mt-3 space-y-1"
-      : isCompactCard
-      ? "mt-1.5 space-y-[1px]"
-      : "mt-2 space-y-[2px]"
+  ? isMobile
+    ? "mt-2.5 space-y-1"
+    : "mt-3 space-y-1"
+  : isCompactCard
+  ? "mt-1.5 space-y-[1px]"
+  : "mt-2 space-y-[2px]"
   }`}
 >
   <p
     className={`uppercase text-[#af8a39] ${
-      isCompactCard
-        ? "text-[6px] tracking-[0.12em]"
-        : "text-[8px] tracking-[0.16em]"
+      isExpandedLike
+  ? isMobile
+    ? "text-[8px] tracking-[0.14em]"
+    : "text-[8px] tracking-[0.16em]"
+  : isCompactCard
+  ? "text-[6px] tracking-[0.12em]"
+  : "text-[8px] tracking-[0.16em]"
     }`}
   >
     Sunday
@@ -838,10 +872,12 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
   <p
     className={`text-[#8c6a2f] ${
       isExpandedLike
-        ? "text-[11px] tracking-[0.1em] sm:text-[12px]"
-        : isCompactCard
-        ? "text-[7px] tracking-[0.04em]"
-        : "text-[10px] tracking-[0.06em] sm:text-[12px]"
+  ? isMobile
+    ? "text-[10px] tracking-[0.05em]"
+    : "text-[11px] tracking-[0.1em] sm:text-[12px]"
+  : isCompactCard
+  ? "text-[7px] tracking-[0.04em]"
+  : "text-[10px] tracking-[0.06em] sm:text-[12px]"
     }`}
   >
     29 January 2027

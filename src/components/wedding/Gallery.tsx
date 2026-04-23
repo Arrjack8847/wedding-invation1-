@@ -38,16 +38,18 @@ const Gallery = () => {
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
           {photos.map((photo, i) => (
             <motion.div
-              key={i}className="group relative aspect-[4/5] cursor-pointer overflow-hidden rounded-[24px] luxury-card"
+              key={i} className="group relative aspect-[4/5] cursor-pointer overflow-hidden rounded-[24px] luxury-card"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
+              
               viewport={{ once: true }}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setSelected(i)}
               layoutId={`photo-${i}`}
             >
+
               <img
                 src={photo.src}
                 alt={photo.label}
