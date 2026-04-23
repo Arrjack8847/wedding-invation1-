@@ -312,6 +312,8 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
     ? SCENE.sceneOffset.mobileY
     : SCENE.sceneOffset.desktopY;
   const isCompactCard = isMobile && !isExpandedLike;
+  const hintText = getHintText(stage);
+const isLongHint = hintText === "Tap to Open Invitation";
 
   const cardLayout = useMemo(() => {
   return {
@@ -495,26 +497,55 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
             }
             transition={isSealed ? FLOAT_TRANSITION : TRANSITIONS.medium}
           >
-            {!isSiteReveal && getHintText(stage) && (
-  <motion.div
-    key={stage}
-    className="pointer-events-none absolute z-[20] text-center"
-    initial={{ opacity: 0, y: 8 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.45 }}
+            {!isSiteReveal && hintText && (
+  <div
+    className="pointer-events-none absolute left-1/2 z-[20] -translate-x-1/2 text-center"
     style={{
-      left: "50%",
-      transform: "translateX(-50%)",
-      bottom: isMobile ? "-78px" : "-96px",
-      width: isMobile ? "260px" : "320px",
-      maxWidth: "80vw",
+      bottom: isMobile
+  ? isLongHint
+    ? "-160px"
+    : "-10px"
+  : isLongHint
+  ? "-180px"
+  : "-10px",
+      width: isMobile
+        ? isLongHint
+          ? "250px"
+          : "250px"
+        : isLongHint
+        ? "320px"
+        : "320px",
+      maxWidth: "82vw",
     }}
   >
-    <p className="text-[10px] uppercase tracking-[0.18em] text-[#af8d42] sm:text-[11px]">
-      {getHintText(stage)}
-    </p>
-  </motion.div>
+    <motion.p
+      key={stage}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45 }}
+      className="uppercase text-[#af8d42]"
+      style={{
+        fontSize: isMobile
+          ? isLongHint
+            ? "8px"
+            : "9px"
+          : "11px",
+        letterSpacing: isMobile
+          ? isLongHint
+            ? "0.10em"
+            : "0.16em"
+          : isLongHint
+          ? "0.14em"
+          : "0.18em",
+        lineHeight: 1.2,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {hintText}
+    </motion.p>
+  </div>
 )}
+
 
             {(stage === "sealed" || stage === "ribbonDrop") && (
               <motion.img
