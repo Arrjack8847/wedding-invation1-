@@ -97,7 +97,7 @@ const SCENE = {
   },
 
   sceneOffset: {
-  mobileY: 30,
+  mobileY: -20,
   desktopY: 10,
 },
 } as const;
