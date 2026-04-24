@@ -1,112 +1,205 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
-
-const photos = [
-  { src: "/gallery-1.jpg", label: "A Beautiful Beginning" },
-  { src: "/gallery-2.jpg", label: "Moments We Treasure" },
-  { src: "/gallery-3.jpg", label: "A Love That Grew" },
-  { src: "/gallery-4.jpg", label: "Side by Side" },
-  { src: "/gallery-5.jpg", label: "Captured with Love" },
-  { src: "/gallery-6.jpg", label: "Forever Starts Here" },
-];
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { weddingData } from "@/data/wedding";
 
 const Gallery = () => {
+  const { gallery } = weddingData;
   const [selected, setSelected] = useState<number | null>(null);
+  const photoCount = gallery.photos.length;
+
+  const popup = {
+    maxWidth: "1100px", // popup width
+    maxHeight: "85vh",  // popup image height
+  };
+
+  const showPrev = () => {
+    setSelected((current) =>
+      current === null ? current : current === 0 ? photoCount - 1 : current - 1,
+    );
+  };
+
+  const showNext = () => {
+    setSelected((current) =>
+      current === null ? current : current === photoCount - 1 ? 0 : current + 1,
+    );
+  };
+
+  useEffect(() => {
+    if (selected === null) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelected(null);
+      }
+
+      if (event.key === "ArrowLeft") {
+        setSelected((current) =>
+          current === null
+            ? current
+            : current === 0
+              ? photoCount - 1
+              : current - 1,
+        );
+      }
+
+      if (event.key === "ArrowRight") {
+        setSelected((current) =>
+          current === null
+            ? current
+            : current === photoCount - 1
+              ? 0
+              : current + 1,
+        );
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [photoCount, selected]);
+
+  const modal =
+    selected !== null ? (
+      <motion.div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={() => setSelected(null)}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Gallery image preview"
+      >
+        <button
+          className="absolute right-6 top-6 z-[60] flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelected(null);
+          }}
+          aria-label="Close"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        <button
+          className="absolute left-4 top-1/2 z-[60] flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 sm:left-6"
+          onClick={(e) => {
+            e.stopPropagation();
+            showPrev();
+          }}
+          aria-label="Previous"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+
+        <button
+          className="absolute right-4 top-1/2 z-[60] flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 sm:right-6"
+          onClick={(e) => {
+            e.stopPropagation();
+            showNext();
+          }}
+          aria-label="Next"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+
+        <motion.div
+          className="relative flex max-h-[85vh] w-full items-center justify-center overflow-hidden rounded-2xl"
+          onClick={(e) => e.stopPropagation()}
+          initial={{ opacity: 0, scale: 0.96, y: 18 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 12 }}
+          transition={{ duration: 0.25 }}
+          style={{
+            maxWidth: popup.maxWidth,
+            maxHeight: popup.maxHeight,
+          }}
+        >
+          <img
+            src={gallery.photos[selected].src}
+            alt={gallery.photos[selected].label}
+            className="max-h-[85vh] max-w-full object-contain"
+            style={{
+              maxHeight: popup.maxHeight,
+            }}
+          />
+
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-6 py-6 text-left">
+            <p className="font-display text-lg text-white sm:text-2xl">
+              {gallery.photos[selected].label}
+            </p>
+            <p className="mt-2 text-sm text-white/80">
+              {selected + 1} / {gallery.photos.length}
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
+    ) : null;
 
   return (
-    <section className="relative px-4 py-24">
+    <section id="gallery" className="relative px-4 py-24 sm:py-28">
       <div className="mx-auto max-w-5xl text-center">
         <motion.p
-          className="mb-3 text-sm uppercase tracking-[0.4em] text-gold"
+          className="mb-4 text-[10px] uppercase tracking-[0.42em] text-gold/75 sm:text-[11px]"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
-          Our Moments
+          {gallery.eyebrow}
         </motion.p>
 
         <motion.h2
-          className="mb-16 font-display text-4xl text-foreground sm:text-5xl"
+          className="font-display text-4xl text-foreground sm:text-5xl md:text-6xl"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          Gallery
+          {gallery.title}
         </motion.h2>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
-          {photos.map((photo, i) => (
-            <motion.div
-              key={i} className="group relative aspect-[4/5] cursor-pointer overflow-hidden rounded-[24px] luxury-card"
+        <motion.div
+          className="gold-line mx-auto mt-5 h-px w-24 sm:w-28"
+          initial={{ scaleX: 0, opacity: 0 }}
+          whileInView={{ scaleX: 1, opacity: 1 }}
+          transition={{ duration: 0.7, delay: 0.1 }}
+          viewport={{ once: true }}
+        />
+
+        <div className="mt-14 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
+          {gallery.photos.map((photo, i) => (
+            <motion.button
+              key={photo.src}
+              type="button"
+              className="cursor-pointer overflow-hidden rounded-[24px] luxury-card text-left"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
-              
               viewport={{ once: true }}
-              whileHover={{ scale: 1.03 }}
+              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setSelected(i)}
-              layoutId={`photo-${i}`}
+              aria-label={`Open ${photo.label}`}
             >
-
               <img
                 src={photo.src}
                 alt={photo.label}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="aspect-[4/5] w-full object-cover transition duration-500"
               />
-
-              <div className="absolute inset-0 bg-black/10 transition-colors duration-300 group-hover:bg-black/20" />
-
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent px-4 py-5 text-left">
-                <p className="translate-y-2 text-xs font-light text-white/85 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 sm:text-sm">
-                  {photo.label}
-                </p>
-              </div>
-            </motion.div>
+            </motion.button>
           ))}
         </div>
       </div>
 
-      <AnimatePresence>
-        {selected !== null && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSelected(null)}
-          >
-            <motion.button
-              className="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelected(null);
-              }}
-            >
-              <X className="h-5 w-5" />
-            </motion.button>
-
-            <motion.div
-              className="relative w-full max-w-3xl overflow-hidden rounded-2xl"
-              layoutId={`photo-${selected}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <img
-                src={photos[selected].src}
-                alt={photos[selected].label}
-                className="max-h-[85vh] w-full object-cover"
-              />
-
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-6 py-6 text-left">
-                <p className="font-display text-lg text-white sm:text-2xl">
-                  {photos[selected].label}
-                </p>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {typeof document !== "undefined" &&
+        createPortal(<AnimatePresence>{modal}</AnimatePresence>, document.body)}
     </section>
   );
 };

@@ -4,6 +4,7 @@ import EnvelopeOpening from "@/components/wedding/EnvelopeOpening";
 import HeroSection from "@/components/wedding/HeroSection";
 import StorySection from "@/components/wedding/StorySection";
 import EventDetails from "@/components/wedding/EventDetails";
+import VenueSection from "@/components/wedding/VenueSection";
 import Gallery from "@/components/wedding/Gallery";
 import RSVPSection from "@/components/wedding/RSVPSection";
 import ContactSection from "@/components/wedding/ContactSection";
@@ -25,7 +26,7 @@ const Index = () => {
           animate={{ opacity: 1, filter: "blur(0px)" }}
           exit={{ opacity: 0, filter: "blur(6px)" }}
           transition={{ duration: 1.2, ease: "easeOut" }}
-          className="relative"
+          className="relative w-full overflow-x-hidden"
         >
           <MusicPlayer play={opened} />
 
@@ -36,10 +37,11 @@ const Index = () => {
           </div>
 
           <HeroSection />
-          <StorySection />
           <EventDetails />
-          <Gallery />
+          <VenueSection />
           <RSVPSection />
+          <StorySection />
+          <Gallery />
           <ContactSection />
         </motion.div>
       )}

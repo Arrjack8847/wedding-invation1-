@@ -8,6 +8,7 @@ interface Petal {
   duration: number;
   size: number;
   opacity: number;
+  drift: number;
 }
 
 const FloatingPetals = () => {
@@ -16,30 +17,31 @@ const FloatingPetals = () => {
   useEffect(() => {
     const generated: Petal[] = Array.from({ length: 15 }, (_, i) => ({
       id: i,
-      x: Math.random() * 100,
+      x: 6 + Math.random() * 88,
       delay: Math.random() * 8,
       duration: 8 + Math.random() * 12,
       size: 8 + Math.random() * 16,
       opacity: 0.15 + Math.random() * 0.25,
+      drift: -28 + Math.random() * 56,
     }));
     setPetals(generated);
   }, []);
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
+    <div className="pointer-events-none fixed inset-0 z-10 overflow-hidden">
       {petals.map((petal) => (
         <motion.div
           key={petal.id}
-          className="absolute"
+          className="absolute will-change-transform"
           style={{
             left: `${petal.x}%`,
-            top: -20,
+            top: -24,
             width: petal.size,
             height: petal.size,
           }}
           animate={{
             y: ["0vh", "105vh"],
-            x: [0, Math.sin(petal.id) * 80],
+            x: [0, petal.drift],
             rotate: [0, 360 * (petal.id % 2 === 0 ? 1 : -1)],
           }}
           transition={{
@@ -49,7 +51,11 @@ const FloatingPetals = () => {
             ease: "linear",
           }}
         >
-          <svg viewBox="0 0 24 24" fill="none" style={{ opacity: petal.opacity }}>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            style={{ opacity: petal.opacity, display: "block" }}
+          >
             <path
               d="M12 2C8 6 4 10 4 14c0 4.4 3.6 8 8 8s8-3.6 8-8c0-4-4-8-8-12z"
               fill="hsl(var(--gold))"

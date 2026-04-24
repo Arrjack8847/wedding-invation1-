@@ -4,10 +4,28 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Heart } from "lucide-react";
+import { weddingData } from "@/data/wedding";
+
+const SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbyzoYp_Yos1aALSnClTiQQbSXHCueAc6A7b9GM_ZnV0IyvKqr9UCmbfPI4QXQsvrRtnWg/exec";
+
+const celebrationHearts = [
+  { x: -54, y: -230, rotate: -28, scale: 0.72, delay: 0 },
+  { x: -30, y: -260, rotate: 18, scale: 0.58, delay: 0.1 },
+  { x: 4, y: -240, rotate: -8, scale: 0.64, delay: 0.2 },
+  { x: 38, y: -275, rotate: 24, scale: 0.7, delay: 0.3 },
+  { x: 62, y: -225, rotate: -16, scale: 0.56, delay: 0.4 },
+  { x: -70, y: -290, rotate: 12, scale: 0.5, delay: 0.5 },
+  { x: 72, y: -305, rotate: -22, scale: 0.52, delay: 0.6 },
+  { x: 18, y: -315, rotate: 30, scale: 0.48, delay: 0.7 },
+] as const;
 
 const RSVPSection = () => {
   const { toast } = useToast();
+  const { rsvp } = weddingData;
+
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
     name: "",
     attending: "yes",
@@ -15,194 +33,277 @@ const RSVPSection = () => {
     message: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!form.name.trim()) {
-      toast({ title: "Please enter your name", variant: "destructive" });
+      toast({ title: rsvp.validationMessage, variant: "destructive" });
       return;
     }
 
-    setSubmitted(true);
+    setIsSubmitting(true);
 
-    toast({
-      title: "Thank You!",
-      description: "Your response has been received with love.",
-    });
+    try {
+      const payload = {
+        name: form.name.trim(),
+        attending: form.attending,
+        guests: form.attending === "yes" ? form.guests : "0",
+        message: form.message.trim(),
+      };
+
+      const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Submission failed");
+      }
+
+      setSubmitted(true);
+
+      toast({
+        title: `${rsvp.successTitle}!`,
+        description: rsvp.toastDescription,
+      });
+    } catch (error) {
+      toast({
+        title: "Submission failed",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+      console.error("RSVP submission error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <section className="relative py-24 px-4">
+    <section id="rsvp" className="relative px-4 py-24 sm:py-28">
       <div className="absolute inset-0 bg-gradient-to-b from-background via-champagne/10 to-background" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,108,0.08),transparent_38%)]" />
 
-      <div className="relative z-10 max-w-lg mx-auto text-center">
+      <div className="relative z-10 mx-auto max-w-xl text-center">
         <motion.p
-          className="text-gold text-sm tracking-[0.4em] uppercase mb-3"
+          className="mb-4 text-[10px] uppercase tracking-[0.42em] text-gold/75 sm:text-[11px]"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
-          Be Our Guest
+          {rsvp.eyebrow}
         </motion.p>
 
         <motion.h2
-          className="font-display text-4xl sm:text-5xl text-foreground mb-12"
-          initial={{ opacity: 0, y: 20 }}
+          className="font-display text-4xl text-foreground sm:text-5xl md:text-6xl"
+          initial={{ opacity: 0, y: 22 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          RSVP
+          {rsvp.title}
         </motion.h2>
+
+        <motion.div
+          className="gold-line mx-auto mt-5 h-px w-24 sm:w-28"
+          initial={{ scaleX: 0, opacity: 0 }}
+          whileInView={{ scaleX: 1, opacity: 1 }}
+          transition={{ duration: 0.7, delay: 0.1 }}
+          viewport={{ once: true }}
+        />
+
+        <motion.p
+          className="mx-auto mt-6 max-w-lg text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.15 }}
+          viewport={{ once: true }}
+        >
+          Let us know if you'll be joining us for this beautiful celebration.
+        </motion.p>
 
         <AnimatePresence mode="wait">
           {!submitted ? (
             <motion.form
               key="form"
-              className="glass rounded-2xl p-8 space-y-6 text-left"
+              className="glass relative mt-10 space-y-6 overflow-hidden rounded-[30px] border border-white/10 p-7 text-left shadow-[0_24px_60px_rgba(0,0,0,0.08)] sm:p-8"
               onSubmit={handleSubmit}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
+              exit={{ opacity: 0, scale: 0.97 }}
+              transition={{ duration: 0.7 }}
               viewport={{ once: true }}
             >
-              {/* Name */}
-              <div>
-                <label className="text-sm text-muted-foreground mb-1.5 block">
-                  Your Name
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,108,0.08),transparent_38%)]" />
+
+              <div className="relative z-10">
+                <label className="mb-2 block text-sm text-muted-foreground">
+                  {rsvp.nameLabel}
                 </label>
                 <Input
                   value={form.name}
-                  onChange={(e) =>
-                    setForm({ ...form, name: e.target.value })
-                  }
-                  placeholder="Enter your full name"
-                  className="bg-background/50 border-border/50 focus:border-gold"
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder={rsvp.namePlaceholder}
+                  className="h-12 rounded-xl border-border/50 bg-background/55 shadow-sm transition-all focus:border-gold focus:ring-1 focus:ring-gold/30"
                   maxLength={100}
+                  disabled={isSubmitting}
                 />
               </div>
 
-              {/* Attendance */}
-              <div>
-                <label className="text-sm text-muted-foreground mb-1.5 block">
-                  Will you be joining us?
+              <div className="relative z-10">
+                <label className="mb-2 block text-sm text-muted-foreground">
+                  {rsvp.attendingLabel}
                 </label>
-                <div className="flex gap-3">
-                  {["yes", "no"].map((val) => (
-                    <button
-                      key={val}
-                      type="button"
-                      className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                        form.attending === val
-                          ? "bg-gold text-primary-foreground"
-                          : "bg-background/50 text-muted-foreground border border-border/50 hover:border-gold/30"
-                      }`}
-                      onClick={() =>
-                        setForm({ ...form, attending: val })
-                      }
-                    >
-                      {val === "yes"
-                        ? "Joyfully Accept"
-                        : "Respectfully Decline"}
-                    </button>
-                  ))}
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {["yes", "no"].map((val) => {
+                    const active = form.attending === val;
+
+                    return (
+                      <motion.button
+                        key={val}
+                        type="button"
+                        whileTap={{ scale: 0.985 }}
+                        disabled={isSubmitting}
+                        className={`rounded-xl px-4 py-3 text-sm font-medium transition-all ${
+                          active
+                            ? "bg-gold text-primary-foreground shadow-[0_12px_28px_rgba(201,162,92,0.28)]"
+                            : "border border-border/50 bg-background/55 text-muted-foreground hover:border-gold/30 hover:bg-background/75"
+                        } ${isSubmitting ? "opacity-70 cursor-not-allowed" : ""}`}
+                        onClick={() => setForm({ ...form, attending: val })}
+                      >
+                        {val === "yes" ? rsvp.acceptText : rsvp.declineText}
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Guests */}
-              {form.attending === "yes" && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                >
-                  <label className="text-sm text-muted-foreground mb-1.5 block">
-                    Number of Guests
-                  </label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={form.guests}
-                    onChange={(e) =>
-                      setForm({ ...form, guests: e.target.value })
-                    }
-                    className="bg-background/50 border-border/50 focus:border-gold"
-                  />
-                </motion.div>
-              )}
+              <AnimatePresence initial={false}>
+                {form.attending === "yes" && (
+                  <motion.div
+                    key="guests"
+                    className="relative z-10 overflow-hidden"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.35 }}
+                  >
+                    <label className="mb-2 block text-sm text-muted-foreground">
+                      {rsvp.guestsLabel}
+                    </label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={form.guests}
+                      onChange={(e) =>
+                        setForm({ ...form, guests: e.target.value })
+                      }
+                      className="h-12 rounded-xl border-border/50 bg-background/55 shadow-sm transition-all focus:border-gold focus:ring-1 focus:ring-gold/30"
+                      disabled={isSubmitting}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              {/* Message */}
-              <div>
-                <label className="text-sm text-muted-foreground mb-1.5 block">
-                  A message for us (optional)
+              <div className="relative z-10">
+                <label className="mb-2 block text-sm text-muted-foreground">
+                  {rsvp.messageLabel} (optional)
                 </label>
                 <Textarea
                   value={form.message}
                   onChange={(e) =>
                     setForm({ ...form, message: e.target.value })
                   }
-                  placeholder="Leave your wishes for the couple..."
-                  rows={3}
-                  className="bg-background/50 border-border/50 focus:border-gold resize-none"
+                  placeholder={rsvp.messagePlaceholder}
+                  rows={4}
+                  className="resize-none rounded-xl border-border/50 bg-background/55 shadow-sm transition-all focus:border-gold focus:ring-1 focus:ring-gold/30"
                   maxLength={500}
+                  disabled={isSubmitting}
                 />
               </div>
 
-              {/* Submit */}
               <motion.button
                 type="submit"
-                className="w-full py-3 rounded-full bg-gold text-primary-foreground font-medium text-sm tracking-wider uppercase hover:brightness-110 transition-all"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                disabled={isSubmitting}
+                className={`relative z-10 w-full rounded-full bg-gold py-3.5 text-[11px] font-medium uppercase tracking-[0.28em] text-primary-foreground shadow-[0_14px_30px_rgba(201,162,92,0.24)] transition-all hover:-translate-y-0.5 hover:brightness-105 ${
+                  isSubmitting ? "cursor-not-allowed opacity-80" : ""
+                }`}
+                whileHover={isSubmitting ? undefined : { scale: 1.01 }}
+                whileTap={isSubmitting ? undefined : { scale: 0.99 }}
               >
-                Send Response
+                {isSubmitting ? "Sending..." : rsvp.submitText}
               </motion.button>
             </motion.form>
           ) : (
             <motion.div
               key="success"
-              className="glass rounded-2xl p-12 flex flex-col items-center"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: "spring", duration: 0.8 }}
+              className="glass relative mt-10 flex flex-col items-center overflow-hidden rounded-[30px] border border-white/10 p-10 shadow-[0_24px_60px_rgba(0,0,0,0.08)] sm:p-12"
+              initial={{ opacity: 0, scale: 0.92, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: "spring", duration: 0.9 }}
             >
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,108,0.14),transparent_45%)]" />
+
               <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
+                className="relative z-10"
+                animate={{ scale: [1, 1.14, 1] }}
+                transition={{ duration: 1.8, repeat: Infinity }}
               >
-                <Heart className="w-12 h-12 text-gold fill-gold/30" />
+                <Heart className="h-12 w-12 fill-gold/30 text-gold" />
               </motion.div>
 
-              <h3 className="font-display text-2xl text-foreground mt-6 mb-2">
-                Thank You
-              </h3>
+              <motion.h3
+                className="relative z-10 mt-6 mb-2 font-display text-2xl text-foreground sm:text-3xl"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.12, duration: 0.5 }}
+              >
+                {rsvp.successTitle}
+              </motion.h3>
 
-              <p className="text-muted-foreground text-sm text-center">
-                Your presence means everything to us.  
-                We look forward to celebrating together.
-              </p>
+              <motion.p
+                className="relative z-10 max-w-sm text-center text-sm leading-7 text-muted-foreground"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.55 }}
+              >
+                {rsvp.successText}
+              </motion.p>
 
-              {/* Floating hearts */}
-              {Array.from({ length: 8 }).map((_, i) => (
+              <motion.div
+                className="relative z-10 mt-6 h-px w-20 bg-gradient-to-r from-transparent via-gold to-transparent"
+                initial={{ scaleX: 0, opacity: 0 }}
+                animate={{ scaleX: 1, opacity: 1 }}
+                transition={{ delay: 0.28, duration: 0.6 }}
+              />
+
+              {celebrationHearts.map((heart, i) => (
                 <motion.div
                   key={i}
-                  className="absolute text-gold/40"
+                  className="absolute text-gold/35"
                   initial={{
-                    x: (Math.random() - 0.5) * 100,
+                    x: 0,
                     y: 0,
                     opacity: 1,
-                    scale: 0.5 + Math.random() * 0.5,
+                    scale: heart.scale,
                   }}
                   animate={{
-                    y: -200 - Math.random() * 100,
+                    x: heart.x,
+                    y: heart.y,
                     opacity: 0,
-                    rotate: (Math.random() - 0.5) * 90,
+                    rotate: heart.rotate,
                   }}
                   transition={{
-                    duration: 2 + Math.random(),
-                    delay: i * 0.1,
+                    duration: 2.2,
+                    delay: heart.delay,
                   }}
                 >
-                  ♥
+                  <Heart className="h-4 w-4 fill-current" />
                 </motion.div>
               ))}
             </motion.div>
