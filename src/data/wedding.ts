@@ -38,7 +38,7 @@ venue: {
   description:
     "A beautiful setting where our celebration will take place, surrounded by elegance, warmth, and the people we love most.",
   mapUrl:
-    "https://www.google.com/maps/place/Arian/@20.1360881,92.8991252",
+    "https://www.google.com/maps/place/Arian/@20.1360752,92.8967701,17z/data=!3m1!4b1!4m6!3m5!1s0x30b04f9e4236f609:0x475ee836395f588e!8m2!3d20.1360702!4d92.899345!16s%2Fg%2F1tg37jls?entry=ttu&g_ep=EgoyMDI2MDQyMS4wIKXMDSoASAFQAw%3D%3D",
   photos: [
     "/venue-1.jpg",
     "/venue-2.jpg",
