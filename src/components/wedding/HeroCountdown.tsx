@@ -39,12 +39,12 @@ const HeroCountdown = ({ targetDate }: Props) => {
   ];
 
   return (
-    <div className="mt-8 flex justify-center">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+    <div className="flex justify-center">
+      <div className="grid w-full max-w-[21rem] grid-cols-4 gap-1.5 sm:max-w-none sm:gap-4">
         {items.map((item, i) => (
           <motion.div
             key={item.label}
-            className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-4 backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.15)]"
+            className="flex min-h-[4.7rem] flex-col items-center justify-center rounded-xl border border-white/15 bg-black/20 px-1.5 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl sm:min-h-[6.25rem] sm:rounded-2xl sm:bg-white/5 sm:px-4 sm:py-4"
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08 }}
@@ -52,7 +52,7 @@ const HeroCountdown = ({ targetDate }: Props) => {
           >
             <motion.p
               key={item.value}
-              className="font-display text-2xl text-white sm:text-3xl"
+              className="font-display text-[1.65rem] leading-none text-white sm:text-3xl"
               initial={{ scale: 0.9, opacity: 0.6 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.3 }}
@@ -60,7 +60,7 @@ const HeroCountdown = ({ targetDate }: Props) => {
               {item.value}
             </motion.p>
 
-            <p className="mt-1 text-[10px] uppercase tracking-[0.25em] text-gold/80">
+            <p className="mt-1.5 text-[7px] uppercase tracking-[0.12em] text-gold-light sm:mt-2 sm:text-[10px] sm:tracking-[0.25em]">
               {item.label}
             </p>
           </motion.div>

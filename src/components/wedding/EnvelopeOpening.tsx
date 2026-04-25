@@ -544,46 +544,71 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
             )}
 
             {(stage === "sealed" || stage === "ribbonDrop") && (
-              <motion.img
-                src={intro.ribbonImage}
-                alt="Ribbon"
-                className="pointer-events-none absolute left-1/2 top-1/2 z-[9]"
-                initial={{
-                  opacity: 1,
-                  x: "-50%",
-                  y: "-50%",
-                  scale: 0.94,
-                }}
-                animate={
-                  isRibbonDrop
-                    ? {
-                        x: "-50%",
-                        y: isMobile ? "calc(-50% + 114px)" : "calc(-50% + 142px)",
-                        opacity: 0,
-                        rotate: 12,
-                        scale: 0.9,
-                      }
-                    : {
-                        x: "-50%",
-                        y: isMobile ? "calc(-50% + 28px)" : "calc(-50% + 35px)",
-                        opacity: 1,
-                        rotate: 0,
-                        scale: 1,
-                      }
-                }
-                transition={{
-                  duration: DURATIONS.ribbonDrop,
-                  ease: EASE,
-                }}
-                style={{
-                  width: isMobile ? "32%" : "34%",
-                  maxWidth: isMobile ? "110px" : "130px",
-                  top: "50%",
-                  left: "50%",
-                  filter: "drop-shadow(0 10px 18px rgba(122,85,30,0.16))",
-                }}
-              />
-            )}
+  <motion.img
+    src={intro.ribbonImage}
+    alt="Ribbon"
+    className="pointer-events-none absolute left-1/2 top-1/2 z-[9]"
+    initial={{
+      opacity: 1,
+      x: "-50%",
+      y: isMobile ? "calc(-50% + 28px)" : "calc(-50% + 35px)",
+      rotate: 0,
+      scale: 0.96,
+    }}
+    animate={
+      isRibbonDrop
+        ? {
+            x: "-50%",
+            y: isMobile
+              ? "calc(-50% + 114px)"
+              : "calc(-50% + 142px)",
+            opacity: 0,
+            rotate: 12,
+            scale: 0.9,
+          }
+        : {
+            x: "-50%",
+            y: isMobile
+              ? "calc(-50% + 28px)"
+              : "calc(-50% + 35px)",
+            opacity: 1,
+            rotate: [0, 360],
+            scale: [1, 1.025, 1],
+          }
+    }
+    transition={
+      isRibbonDrop
+        ? {
+            duration: DURATIONS.ribbonDrop,
+            ease: EASE,
+          }
+        : {
+            rotate: {
+              duration: 5.2,
+              repeat: Infinity,
+              ease: "linear",
+            },
+            scale: {
+              duration: 2.4,
+              repeat: Infinity,
+              ease: "easeInOut",
+            },
+            opacity: {
+              duration: 0.4,
+              ease: EASE,
+            },
+          }
+    }
+    style={{
+      width: isMobile ? "32%" : "34%",
+      maxWidth: isMobile ? "110px" : "130px",
+      top: "50%",
+      left: "50%",
+      transformOrigin: "50% 50%",
+      filter: "drop-shadow(0 10px 18px rgba(122,85,30,0.16))",
+    }}
+  />
+)}
 
             {isSealed && (
               <motion.img
