@@ -1,12 +1,12 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { CalendarDays, ChevronDown, Heart } from "lucide-react";
-import { weddingData } from "@/data/wedding";
+import { useWeddingContent } from "@/context/language";
 import HeroCountdown from "@/components/wedding/HeroCountdown";
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const HeroSection = () => {
-  const { couple, hero } = weddingData;
+  const { couple, hero, ui } = useWeddingContent();
   const reduceMotion = useReducedMotion();
 
   const bgMotion = reduceMotion
@@ -151,7 +151,7 @@ const HeroSection = () => {
                 {hero.badgeLabel}
               </span>
 
-              <span className="mt-1 block font-display text-[1.35rem] leading-none text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.45)] sm:text-2xl">
+              <span className="mt-1 block max-w-[13rem] font-display text-[1.2rem] leading-tight text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.45)] sm:max-w-none sm:text-2xl">
                 {hero.dateText}
               </span>
             </div>
@@ -168,14 +168,14 @@ const HeroSection = () => {
               href="#details"
               className="inline-flex min-h-10 w-full max-w-[15.5rem] items-center justify-center rounded-full bg-gold px-6 text-[9.5px] font-medium uppercase tracking-[0.24em] text-primary-foreground shadow-[0_16px_34px_rgba(201,162,92,0.28)] transition-all duration-300 active:scale-[0.98] sm:min-h-11 sm:w-auto sm:max-w-none sm:text-[10px] sm:tracking-[0.28em] sm:hover:-translate-y-0.5 sm:hover:brightness-105"
             >
-              View Details
+              {ui.viewDetails}
             </a>
 
             <a
               href="#rsvp"
               className="inline-flex min-h-10 w-full max-w-[15.5rem] items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 text-[9.5px] font-medium uppercase tracking-[0.24em] text-white shadow-[0_16px_34px_rgba(0,0,0,0.16)] backdrop-blur-md transition-all duration-300 active:scale-[0.98] sm:min-h-11 sm:w-auto sm:max-w-none sm:text-[10px] sm:tracking-[0.28em] sm:hover:-translate-y-0.5 sm:hover:bg-white/15"
             >
-              RSVP
+              {ui.rsvpShort}
             </a>
           </motion.div>
 

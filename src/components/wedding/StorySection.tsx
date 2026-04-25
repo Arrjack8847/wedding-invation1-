@@ -1,11 +1,11 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { Sparkles } from "lucide-react";
-import { weddingData } from "@/data/wedding";
+import { useWeddingContent } from "@/context/language";
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const StorySection = () => {
-  const { stories } = weddingData;
+  const { stories, ui } = useWeddingContent();
   const reduceMotion = useReducedMotion();
 
   return (
@@ -16,14 +16,14 @@ const StorySection = () => {
         const isFinal = i === 2;
 
         const chapterLabel = isCenter
-          ? "Chapter One"
+          ? ui.chapterOne
           : isLeftCard
-            ? "Chapter Two"
-            : "Final Chapter";
+            ? ui.chapterTwo
+            : ui.finalChapter;
 
         return (
           <section key={i} className="relative overflow-hidden bg-[#fbf5eb]">
-            {/* ✅ MOBILE LAYOUT — FULL PHOTO VISIBLE */}
+            {/* Mobile layout keeps the full photo visible. */}
             <div className="block px-4 py-12 sm:hidden">
               <motion.div
                 className="mx-auto max-w-[420px]"
@@ -93,7 +93,7 @@ const StorySection = () => {
               </motion.div>
             </div>
 
-            {/* ✅ DESKTOP / TABLET LAYOUT — CINEMATIC BACKGROUND */}
+            {/* Desktop and tablet layout uses the photo as a cinematic background. */}
             <div className="relative hidden min-h-screen w-full items-center overflow-hidden sm:flex">
               <motion.div
                 className="absolute inset-0"
@@ -201,7 +201,7 @@ const StorySection = () => {
                         transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
                         viewport={{ once: true }}
                       >
-                        Chapter Two
+                        {ui.chapterTwo}
                       </motion.p>
 
                       <motion.h2
@@ -244,7 +244,7 @@ const StorySection = () => {
                       transition={{ duration: 0.7, ease: EASE }}
                       viewport={{ once: true }}
                     >
-                      Final Chapter
+                      {ui.finalChapter}
                     </motion.p>
 
                     <motion.h2

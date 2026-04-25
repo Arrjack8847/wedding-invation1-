@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
-import { weddingData } from "@/data/wedding";
+import { useWeddingContent } from "@/context/language";
 
 const Gallery = () => {
-  const { gallery } = weddingData;
+  const { gallery, ui } = useWeddingContent();
   const [selected, setSelected] = useState<number | null>(null);
   const photoCount = gallery.photos.length;
 
@@ -76,7 +76,7 @@ const Gallery = () => {
         onClick={() => setSelected(null)}
         role="dialog"
         aria-modal="true"
-        aria-label="Gallery image preview"
+        aria-label={ui.galleryDialogLabel}
       >
         <button
           className="absolute right-6 top-6 z-[60] flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
@@ -84,7 +84,7 @@ const Gallery = () => {
             e.stopPropagation();
             setSelected(null);
           }}
-          aria-label="Close"
+          aria-label={ui.close}
         >
           <X className="h-5 w-5" />
         </button>
@@ -95,7 +95,7 @@ const Gallery = () => {
             e.stopPropagation();
             showPrev();
           }}
-          aria-label="Previous"
+          aria-label={ui.previous}
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
@@ -106,7 +106,7 @@ const Gallery = () => {
             e.stopPropagation();
             showNext();
           }}
-          aria-label="Next"
+          aria-label={ui.next}
         >
           <ChevronRight className="h-5 w-5" />
         </button>
@@ -186,7 +186,7 @@ const Gallery = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setSelected(i)}
-              aria-label={`Open ${photo.label}`}
+              aria-label={`${ui.openGalleryItem} ${photo.label}`}
             >
               <img
                 src={photo.src}

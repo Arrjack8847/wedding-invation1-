@@ -1,5 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600&display=swap');
 
+@font-face {
+  font-family: 'NotoSansMyanmarLocal';
+  src: url('/fonts/NotoSansMyanmar-Regular.ttf') format('truetype');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'NotoSansMyanmarLocal';
+  src: url('/fonts/NotoSansMyanmar-Bold.ttf') format('truetype');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 700;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -111,6 +127,10 @@
     font-family: 'Playfair Display', serif;
   }
 
+  .font-myanmar {
+    font-family: 'NotoSansMyanmarLocal', 'Inter', sans-serif;
+  }
+
   .glass {
     background: linear-gradient(
       135deg,
@@ -173,4 +193,32 @@
     pointer-events: none;
     z-index: 0;
   }
+}
+
+html[data-language="my"] body {
+  font-family: 'NotoSansMyanmarLocal', 'Inter', sans-serif;
+}
+
+html[data-language="my"] .font-display,
+html[data-language="my"] .font-myanmar {
+  font-family: 'NotoSansMyanmarLocal', 'Inter', sans-serif;
+}
+
+html[data-language="my"] .font-display {
+  font-weight: 700;
+  line-height: 1.32;
+}
+
+html[data-language="my"] [class*="tracking-"] {
+  letter-spacing: 0 !important;
+}
+
+html[data-language="my"] .uppercase {
+  text-transform: none;
+}
+
+html[data-language="my"] input,
+html[data-language="my"] textarea,
+html[data-language="my"] button {
+  font-family: 'NotoSansMyanmarLocal', 'Inter', sans-serif;
 }

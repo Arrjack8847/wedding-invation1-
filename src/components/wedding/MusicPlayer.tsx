@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Volume2, VolumeX } from "lucide-react";
+import { useWeddingContent } from "@/context/language";
 
 interface MusicPlayerProps {
   play: boolean;
@@ -8,6 +9,7 @@ interface MusicPlayerProps {
 
 const MusicPlayer = ({ play }: MusicPlayerProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { ui } = useWeddingContent();
   const [muted, setMuted] = useState(false);
 
   useEffect(() => {
@@ -53,7 +55,7 @@ const MusicPlayer = ({ play }: MusicPlayerProps) => {
         initial={{ opacity: 0, scale: 0.88, y: -8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ delay: 1, duration: 0.5 }}
-        aria-label={muted ? "Unmute music" : "Mute music"}
+        aria-label={muted ? ui.unmuteMusic : ui.muteMusic}
       >
         <span className="absolute inset-0 rounded-full ring-1 ring-gold/15" />
         <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(212,175,108,0.12),transparent_65%)]" />

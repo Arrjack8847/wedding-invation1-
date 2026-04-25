@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Heart, Check } from "lucide-react";
-import { weddingData } from "@/data/wedding";
+import { useWeddingContent } from "@/context/language";
 
 const SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbyzoYp_Yos1aALSnClTiQQbSXHCueAc6A7b9GM_ZnV0IyvKqr9UCmbfPI4QXQsvrRtnWg/exec";
@@ -24,7 +24,7 @@ const celebrationHearts = [
 
 const RSVPSection = () => {
   const { toast } = useToast();
-  const { rsvp } = weddingData;
+  const { rsvp, ui } = useWeddingContent();
   const reduceMotion = useReducedMotion();
 
   const [submitted, setSubmitted] = useState(false);
@@ -77,8 +77,8 @@ const RSVPSection = () => {
       });
     } catch (error) {
       toast({
-        title: "Submission failed",
-        description: "Please try again in a moment.",
+        title: ui.submissionFailed,
+        description: ui.submissionFailedDescription,
         variant: "destructive",
       });
 
@@ -155,7 +155,7 @@ const RSVPSection = () => {
               transition={{ duration: 0.8, delay: 0.12, ease: EASE }}
               viewport={{ once: true, amount: 0.3 }}
             >
-              Let us know if you'll be joining us for this beautiful celebration.
+              {ui.rsvpHelper}
             </motion.p>
 
             <motion.div
@@ -166,11 +166,10 @@ const RSVPSection = () => {
               viewport={{ once: true, amount: 0.3 }}
             >
               <p className="text-[10px] uppercase tracking-[0.32em] text-gold/80">
-                Kindly Reply
+                {ui.kindlyReply}
               </p>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                Your response helps us prepare a beautiful celebration for
-                everyone joining us.
+                {ui.kindlyReplyText}
               </p>
             </motion.div>
           </div>
@@ -217,7 +216,7 @@ const RSVPSection = () => {
                       {rsvp.attendingLabel}
                     </label>
 
-                    <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
                       {["yes", "no"].map((val) => {
                         const active = form.attending === val;
 
@@ -292,7 +291,7 @@ const RSVPSection = () => {
                     <label className="mb-2 block text-[13px] text-muted-foreground sm:text-sm">
                       {rsvp.messageLabel}{" "}
                       <span className="text-muted-foreground/60">
-                        (optional)
+                        ({ui.optional})
                       </span>
                     </label>
 
@@ -319,7 +318,7 @@ const RSVPSection = () => {
                     whileHover={isSubmitting ? undefined : { scale: 1.01 }}
                     whileTap={isSubmitting ? undefined : { scale: 0.99 }}
                   >
-                    {isSubmitting ? "Sending..." : rsvp.submitText}
+                    {isSubmitting ? ui.sending : rsvp.submitText}
                   </motion.button>
                 </div>
               </motion.form>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, type Transition } from "framer-motion";
-import { weddingData } from "@/data/wedding";
+import { useWeddingContent } from "@/context/language";
+import type { WeddingContent } from "@/data/wedding";
 import OpeningBackground from "./OpeningBackground";
 
 interface Props {
@@ -107,9 +108,9 @@ const TRANSITIONS = {
   expand: { duration: DURATIONS.expand, ease: EASE } satisfies Transition,
 };
 
-function getHintText(stage: Stage) {
-  if (stage === "sealed") return weddingData.intro.hint;
-  if (stage === "revealed") return weddingData.intro.revealHint;
+function getHintText(stage: Stage, intro: WeddingContent["intro"]) {
+  if (stage === "sealed") return intro.hint;
+  if (stage === "revealed") return intro.revealHint;
   return "";
 }
 
@@ -226,7 +227,7 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
   const [stage, setStage] = useState<Stage>("sealed");
   const timeoutsRef = useRef<number[]>([]);
 
-  const { couple, intro, hero } = weddingData;
+  const { couple, intro, hero } = useWeddingContent();
 
   const clearAllTimeouts = useCallback(() => {
     timeoutsRef.current.forEach((id) => window.clearTimeout(id));
@@ -308,7 +309,7 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
     : SCENE.sceneOffset.desktopY;
 
   const isCompactCard = isMobile && !isExpandedLike;
-  const hintText = getHintText(stage);
+  const hintText = getHintText(stage, intro);
   const isLongHint = hintText === intro.revealHint;
 
   const cardLayout = useMemo(() => {
@@ -882,7 +883,7 @@ const EnvelopeOpening = ({ onOpen }: Props) => {
                                 : "text-[10px]"
                           }`}
                         >
-                          ✦
+                          *
                         </span>
                         <span
                           className={`${isCompactCard ? "w-4" : "w-6"} h-px bg-[#dcc27d]/75`}

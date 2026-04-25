@@ -1,11 +1,11 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { MapPin } from "lucide-react";
-import { weddingData } from "@/data/wedding";
+import { useWeddingContent } from "@/context/language";
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const VenueSection = () => {
-  const { venue } = weddingData;
+  const { venue, ui } = useWeddingContent();
   const reduceMotion = useReducedMotion();
 
   const mainPhoto = venue.photos[0];
@@ -84,7 +84,7 @@ const VenueSection = () => {
               <div className="overflow-hidden rounded-[24px]">
                 <img
                   src={mainPhoto}
-                  alt="Wedding venue"
+                  alt={ui.venueAlt}
                   className="h-[330px] w-full object-cover transition duration-700 group-hover:scale-105 sm:h-[430px] lg:h-[520px]"
                 />
               </div>
@@ -111,7 +111,7 @@ const VenueSection = () => {
                 <div className="overflow-hidden rounded-[20px]">
                   <img
                     src={src}
-                    alt="Wedding venue detail"
+                    alt={ui.venueDetailAlt}
                     className="h-[170px] w-full object-cover transition duration-700 group-hover:scale-105 sm:h-[230px] lg:h-[250px]"
                   />
                 </div>
@@ -137,7 +137,7 @@ const VenueSection = () => {
             className="inline-flex min-h-[54px] w-full max-w-[20rem] items-center justify-center gap-3 rounded-full bg-gold px-7 text-[10px] font-medium uppercase tracking-[0.28em] text-white shadow-[0_16px_36px_rgba(201,162,92,0.28)] transition-all duration-300 active:scale-[0.98] sm:w-auto sm:max-w-none sm:px-10 sm:text-[11px] sm:hover:-translate-y-0.5 sm:hover:brightness-110"
           >
             <MapPin className="h-4 w-4 shrink-0" />
-            View Location
+            {ui.viewLocation}
           </a>
         </motion.div>
       </div>

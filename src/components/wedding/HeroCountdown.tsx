@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useWeddingContent } from "@/context/language";
 
 interface Props {
   targetDate: string;
@@ -21,6 +22,7 @@ const calculateTimeLeft = (targetDate: string) => {
 };
 
 const HeroCountdown = ({ targetDate }: Props) => {
+  const { ui } = useWeddingContent();
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(targetDate));
 
   useEffect(() => {
@@ -32,10 +34,10 @@ const HeroCountdown = ({ targetDate }: Props) => {
   }, [targetDate]);
 
   const items = [
-    { label: "Days", value: timeLeft.days },
-    { label: "Hours", value: timeLeft.hours },
-    { label: "Minutes", value: timeLeft.minutes },
-    { label: "Seconds", value: timeLeft.seconds },
+    { label: ui.countdown.days, value: timeLeft.days },
+    { label: ui.countdown.hours, value: timeLeft.hours },
+    { label: ui.countdown.minutes, value: timeLeft.minutes },
+    { label: ui.countdown.seconds, value: timeLeft.seconds },
   ];
 
   return (

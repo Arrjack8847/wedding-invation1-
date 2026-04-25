@@ -1,11 +1,11 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Heart, MessageCircle, Sparkles } from "lucide-react";
-import { weddingData } from "@/data/wedding";
+import { useWeddingContent } from "@/context/language";
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const ContactSection = () => {
-  const { contact, couple } = weddingData;
+  const { contact, couple } = useWeddingContent();
   const reduceMotion = useReducedMotion();
 
   return (

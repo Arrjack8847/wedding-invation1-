@@ -17,6 +17,7 @@ export default {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
         display: ['Playfair Display', 'serif'],
+        myanmar: ['NotoSansMyanmarLocal', 'Inter', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
